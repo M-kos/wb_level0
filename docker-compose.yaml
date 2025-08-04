@@ -16,40 +16,40 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
 
-  migrations-up:
-    image: kukymbr/goose-docker:latest
-    volumes:
-      - ./migrations:/migrations
-    environment:
-      GOOSE_DRIVER: ${GOOSE_DRIVER}
-      GOOSE_DBSTRING: ${GOOSE_DBSTRING}
-      GOOSE_MIGRATION_DIR: ${GOOSE_MIGRATION_DIR}
-      GOOSE_TABLE: ${GOOSE_TABLE}
-    command: "goose -dir /migrations up"
-    depends_on:
-      postgres:
-        condition:
-          service_healthy
-  migrations-down:
-    image: kukymbr/goose-docker:latest
-    volumes:
-      - ./migrations:/migrations
-    environment:
-      GOOSE_DRIVER: ${GOOSE_DRIVER}
-      GOOSE_DBSTRING: ${GOOSE_DBSTRING}
-      GOOSE_MIGRATION_DIR: ${GOOSE_MIGRATION_DIR}
-      GOOSE_TABLE: ${GOOSE_TABLE}
-    command: "goose -dir /migrations down"
-    depends_on:
-      postgres:
-        condition:
-          service_healthy
-    profiles:
-      - migrations-down
+#  migrations-up:
+#    image: kukymbr/goose-docker:latest
+#    volumes:
+#      - ./migrations:/migrations
+#    environment:
+#      GOOSE_DRIVER: ${GOOSE_DRIVER}
+#      GOOSE_DBSTRING: ${GOOSE_DBSTRING}
+#      GOOSE_MIGRATION_DIR: ${GOOSE_MIGRATION_DIR}
+#      GOOSE_TABLE: ${GOOSE_TABLE}
+#    command: "goose -dir /migrations up"
+#    depends_on:
+#      postgres:
+#        condition:
+#          service_healthy
+#  migrations-down:
+#    image: kukymbr/goose-docker:latest
+#    volumes:
+#      - ./migrations:/migrations
+#    environment:
+#      GOOSE_DRIVER: ${GOOSE_DRIVER}
+#      GOOSE_DBSTRING: ${GOOSE_DBSTRING}
+#      GOOSE_MIGRATION_DIR: ${GOOSE_MIGRATION_DIR}
+#      GOOSE_TABLE: ${GOOSE_TABLE}
+#    command: "goose -dir /migrations down"
+#    depends_on:
+#      postgres:
+#        condition:
+#          service_healthy
+#    profiles:
+#      - migrations-down
 
   order_service:
     container_name: order_service
-    image: order:latest
+    image: order-service:latest
     build:
       context: ./
       dockerfile: ./Dockerfile
