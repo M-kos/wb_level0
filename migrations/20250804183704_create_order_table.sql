@@ -1,7 +1,5 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE USER customer WITH PASSWORD 'customer';
-
 CREATE TABLE IF NOT EXISTS "order"
 (
 	id                  BIGSERIAL,
@@ -35,13 +33,92 @@ CREATE TABLE IF NOT EXISTS "order"
 
 CREATE TABLE IF NOT EXISTS delivery
 (
-	id BIGSERIAL,
+	id         BIGSERIAL,
+	name       VARCHAR(255) NOT NULL,
+	phone      VARCHAR(255) NOT NULL,
+	email      VARCHAR(255),
+	address_id BIGINT       NOT NULL,
+
+	PRIMARY KEY ( id ),
+	FOREIGN KEY ( address_id )
+		REFERENCES address ( id )
+);
+
+CREATE TABLE IF NOT EXISTS region
+(
+	id   BIGSERIAL,
+	name VARCHAR(255) NOT NULL,
+
 	PRIMARY KEY ( id )
+);
+
+CREATE TABLE IF NOT EXISTS city
+(
+	id        BIGSERIAL,
+	name      VARCHAR(255) NOT NULL,
+	region_id BIGINT       NOT NULL,
+
+	PRIMARY KEY ( id ),
+	FOREIGN KEY ( region_id )
+		REFERENCES region ( id )
+);
+
+CREATE TABLE IF NOT EXISTS address
+(
+	id      BIGSERIAL,
+	zip     VARCHAR(255) NOT NULL,
+	address VARCHAR(255) NOT NULL,
+	city_id BIGINT       NOT NULL,
+
+	PRIMARY KEY ( id ),
+	FOREIGN KEY ( city_id )
+		REFERENCES city ( id )
 );
 
 CREATE TABLE IF NOT EXISTS payment
 (
-	id BIGSERIAL,
+	id            BIGSERIAL,
+	transaction   VARCHAR(255) NOT NULL,
+	request_id    VARCHAR(255),
+	currency_id   BIGINT       NOT NULL,
+	provider_id   BIGINT       NOT NULL,
+	amount        INT          NOT NULL,
+	payment_dt    TIMESTAMP    NOT NULL,
+	bank_id       BIGINT       NOT NULL,
+	delivery_cost INT          NOT NULL,
+	goods_total   INT          NOT NULL,
+	custom_fee    INT          NOT NULL,
+
+	PRIMARY KEY ( id ),
+	FOREIGN KEY ( currency_id )
+		REFERENCES currency ( id ),
+	FOREIGN KEY ( provider_id )
+		REFERENCES provider ( id ),
+	FOREIGN KEY ( bank_id )
+		REFERENCES bank ( id )
+);
+
+CREATE TABLE IF NOT EXISTS currency
+(
+	id   BIGSERIAL,
+	name VARCHAR(255) NOT NULL,
+
+	PRIMARY KEY ( id )
+);
+
+CREATE TABLE IF NOT EXISTS provider
+(
+	id   BIGSERIAL,
+	name VARCHAR(255) NOT NULL,
+
+	PRIMARY KEY ( id )
+);
+
+CREATE TABLE IF NOT EXISTS bank
+(
+	id   BIGSERIAL,
+	name VARCHAR(255) NOT NULL,
+
 	PRIMARY KEY ( id )
 );
 
@@ -49,6 +126,7 @@ CREATE TABLE IF NOT EXISTS locale
 (
 	id   BIGSERIAL,
 	name VARCHAR(255) NOT NULL,
+
 	PRIMARY KEY ( id )
 );
 
@@ -56,13 +134,45 @@ CREATE TABLE IF NOT EXISTS delivery_service
 (
 	id   BIGSERIAL,
 	name VARCHAR(255) NOT NULL,
+
 	PRIMARY KEY ( id )
 );
 
 CREATE TABLE IF NOT EXISTS item
 (
+	id           BIGSERIAL,
+	chrt_id      BIGINT       NOT NULL,
+	track_number VARCHAR(255) NOT NULL,
+	price        INT          NOT NULL,
+	rid          VARCHAR(255) NOT NULL,
+	name         VARCHAR(255) NOT NULL,
+	sale         INT          NOT NULL,
+	size         VARCHAR(255),
+	total_price  INT          NOT NULL,
+	nm_id        BIGINT       NOT NULL,
+	brand_id     BIGINT       NOT NULL,
+	status_id    BIGINT       NOT NULL,
+
+	PRIMARY KEY ( id ),
+	FOREIGN KEY ( brand_id )
+		REFERENCES brand ( id ),
+	FOREIGN KEY ( status_id )
+		REFERENCES item_status ( id )
+);
+
+CREATE TABLE IF NOT EXISTS brand
+(
 	id   BIGSERIAL,
 	name VARCHAR(255) NOT NULL,
+
+	PRIMARY KEY ( id )
+);
+
+CREATE TABLE IF NOT EXISTS item_status
+(
+	id    BIGSERIAL,
+	value INT NOT NULL,
+
 	PRIMARY KEY ( id )
 );
 
@@ -70,6 +180,7 @@ CREATE TABLE IF NOT EXISTS order_item
 (
 	order_id BIGINT NOT NULL,
 	item_id  BIGINT NOT NULL,
+
 	PRIMARY KEY ( order_id, item_id ),
 	FOREIGN KEY ( order_id )
 		REFERENCES "order" ( id )
@@ -78,6 +189,9 @@ CREATE TABLE IF NOT EXISTS order_item
 		REFERENCES item ( id )
 		ON DELETE CASCADE
 );
+
+CREATE INDEX idx_order_item_item_order ON order_item ( item_id, order_id );
+
 -- +goose StatementEnd
 
 -- +goose Down
