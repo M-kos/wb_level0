@@ -1,48 +1,5 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS "order"
-(
-	id                  BIGSERIAL,
-	order_uid           VARCHAR(255) NOT NULL
-		UNIQUE,
-	track_number        VARCHAR(255) NOT NULL
-		UNIQUE,
-	entry               VARCHAR(255) NOT NULL
-		UNIQUE,
-	delivery_id         BIGINT       NOT NULL,
-	payment_id          BIGINT       NOT NULL,
-	locale_id           BIGINT       NOT NULL,
-	internal_signature  VARCHAR(255),
-	customer_id         VARCHAR(255) NOT NULL,
-	delivery_service_id BIGINT       NOT NULL,
-	shardkey            VARCHAR(255) NOT NULL,
-	sm_id               INT          NOT NULL,
-	date_created        TIMESTAMP    NOT NULL DEFAULT now( ),
-	oof_shard           VARCHAR(255) NOT NULL,
-
-	PRIMARY KEY ( id ),
-	FOREIGN KEY ( delivery_id )
-		REFERENCES delivery ( id ),
-	FOREIGN KEY ( payment_id )
-		REFERENCES payment ( id ),
-	FOREIGN KEY ( locale_id )
-		REFERENCES locale ( id ),
-	FOREIGN KEY ( delivery_service_id )
-		REFERENCES delivery_service ( id )
-);
-
-CREATE TABLE IF NOT EXISTS delivery
-(
-	id         BIGSERIAL,
-	name       VARCHAR(255) NOT NULL,
-	phone      VARCHAR(255) NOT NULL,
-	email      VARCHAR(255),
-	address_id BIGINT       NOT NULL,
-
-	PRIMARY KEY ( id ),
-	FOREIGN KEY ( address_id )
-		REFERENCES address ( id )
-);
 
 CREATE TABLE IF NOT EXISTS region
 (
@@ -75,28 +32,19 @@ CREATE TABLE IF NOT EXISTS address
 		REFERENCES city ( id )
 );
 
-CREATE TABLE IF NOT EXISTS payment
+CREATE TABLE IF NOT EXISTS delivery
 (
-	id            BIGSERIAL,
-	transaction   VARCHAR(255) NOT NULL,
-	request_id    VARCHAR(255),
-	currency_id   BIGINT       NOT NULL,
-	provider_id   BIGINT       NOT NULL,
-	amount        INT          NOT NULL,
-	payment_dt    TIMESTAMP    NOT NULL,
-	bank_id       BIGINT       NOT NULL,
-	delivery_cost INT          NOT NULL,
-	goods_total   INT          NOT NULL,
-	custom_fee    INT          NOT NULL,
+	id         BIGSERIAL,
+	name       VARCHAR(255) NOT NULL,
+	phone      VARCHAR(255) NOT NULL,
+	email      VARCHAR(255),
+	address_id BIGINT       NOT NULL,
 
 	PRIMARY KEY ( id ),
-	FOREIGN KEY ( currency_id )
-		REFERENCES currency ( id ),
-	FOREIGN KEY ( provider_id )
-		REFERENCES provider ( id ),
-	FOREIGN KEY ( bank_id )
-		REFERENCES bank ( id )
+	FOREIGN KEY ( address_id )
+		REFERENCES address ( id )
 );
+
 
 CREATE TABLE IF NOT EXISTS currency
 (
@@ -122,6 +70,30 @@ CREATE TABLE IF NOT EXISTS bank
 	PRIMARY KEY ( id )
 );
 
+CREATE TABLE IF NOT EXISTS payment
+(
+	id            BIGSERIAL,
+	transaction   VARCHAR(255) NOT NULL,
+	request_id    VARCHAR(255),
+	currency_id   BIGINT       NOT NULL,
+	provider_id   BIGINT       NOT NULL,
+	amount        INT          NOT NULL,
+	payment_dt    TIMESTAMP    NOT NULL,
+	bank_id       BIGINT       NOT NULL,
+	delivery_cost INT          NOT NULL,
+	goods_total   INT          NOT NULL,
+	custom_fee    INT          NOT NULL,
+
+	PRIMARY KEY ( id ),
+	FOREIGN KEY ( currency_id )
+		REFERENCES currency ( id ),
+	FOREIGN KEY ( provider_id )
+		REFERENCES provider ( id ),
+	FOREIGN KEY ( bank_id )
+		REFERENCES bank ( id )
+);
+
+
 CREATE TABLE IF NOT EXISTS locale
 (
 	id   BIGSERIAL,
@@ -134,6 +106,22 @@ CREATE TABLE IF NOT EXISTS delivery_service
 (
 	id   BIGSERIAL,
 	name VARCHAR(255) NOT NULL,
+
+	PRIMARY KEY ( id )
+);
+
+CREATE TABLE IF NOT EXISTS brand
+(
+	id   BIGSERIAL,
+	name VARCHAR(255) NOT NULL,
+
+	PRIMARY KEY ( id )
+);
+
+CREATE TABLE IF NOT EXISTS item_status
+(
+	id    BIGSERIAL,
+	value INT NOT NULL,
 
 	PRIMARY KEY ( id )
 );
@@ -160,21 +148,37 @@ CREATE TABLE IF NOT EXISTS item
 		REFERENCES item_status ( id )
 );
 
-CREATE TABLE IF NOT EXISTS brand
+CREATE TABLE IF NOT EXISTS "order"
 (
-	id   BIGSERIAL,
-	name VARCHAR(255) NOT NULL,
+	id                  BIGSERIAL,
+	order_uid           VARCHAR(255) NOT NULL
+		UNIQUE,
+	track_number        VARCHAR(255) NOT NULL
+		UNIQUE,
+	entry               VARCHAR(255) NOT NULL
+		UNIQUE,
+	delivery_id         BIGINT       NOT NULL,
+	payment_id          BIGINT       NOT NULL,
+	locale_id           BIGINT       NOT NULL,
+	internal_signature  VARCHAR(255),
+	customer_id         VARCHAR(255) NOT NULL,
+	delivery_service_id BIGINT       NOT NULL,
+	shardkey            VARCHAR(255) NOT NULL,
+	sm_id               INT          NOT NULL,
+	date_created        TIMESTAMP    NOT NULL DEFAULT now( ),
+	oof_shard           VARCHAR(255) NOT NULL,
 
-	PRIMARY KEY ( id )
+	PRIMARY KEY ( id ),
+	FOREIGN KEY ( delivery_id )
+		REFERENCES delivery ( id ),
+	FOREIGN KEY ( payment_id )
+		REFERENCES payment ( id ),
+	FOREIGN KEY ( locale_id )
+		REFERENCES locale ( id ),
+	FOREIGN KEY ( delivery_service_id )
+		REFERENCES delivery_service ( id )
 );
 
-CREATE TABLE IF NOT EXISTS item_status
-(
-	id    BIGSERIAL,
-	value INT NOT NULL,
-
-	PRIMARY KEY ( id )
-);
 
 CREATE TABLE IF NOT EXISTS order_item
 (
@@ -191,13 +195,27 @@ CREATE TABLE IF NOT EXISTS order_item
 );
 
 CREATE INDEX idx_order_item_item_order ON order_item ( item_id, order_id );
-
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TYPE IF EXISTS user_status;
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS "order";
+DROP TABLE IF EXISTS delivery;
+DROP TABLE IF EXISTS region;
+DROP TABLE IF EXISTS city;
+DROP TABLE IF EXISTS address;
+DROP TABLE IF EXISTS payment;
+DROP TABLE IF EXISTS currency;
+DROP TABLE IF EXISTS provider;
+DROP TABLE IF EXISTS bank;
+DROP TABLE IF EXISTS locale;
+DROP TABLE IF EXISTS delivery_service;
+DROP TABLE IF EXISTS item;
+DROP TABLE IF EXISTS brand;
+DROP TABLE IF EXISTS item_status;
+DROP TABLE IF EXISTS order_item;
+
+DROP INDEX IF EXISTS idx_order_item_item_order;
 -- +goose StatementEnd
 
 
