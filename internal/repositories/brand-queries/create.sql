@@ -1,0 +1,3 @@
+INSERT INTO brand (name)
+VALUES ($1)
+RETURNING id;

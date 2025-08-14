@@ -1,0 +1,3 @@
+INSERT INTO bank (name)
+VALUES ($1)
+RETURNING id;

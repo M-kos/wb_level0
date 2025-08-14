@@ -9,12 +9,28 @@ type Order struct {
 	Delivery          Delivery
 	Payment           Payment
 	Items             []Item
-	Locale            string
+	Locale            Locale
 	InternalSignature string
 	CustomerID        string
-	DeliveryService   string
+	DeliveryService   DeliveryService
 	Shardkey          string
 	SmID              int
 	DateCreated       time.Time
+	OofShard          string
+}
+
+type OrderDBModel struct {
+	OrderUID          string
+	TrackNumber       string
+	Entry             string
+	DeliveryID        int
+	PaymentID         int
+	LocaleID          int
+	InternalSignature string
+	CustomerID        string
+	DeliveryServiceID int
+	Shardkey          string
+	SmID              int
+	DateCreated       int
 	OofShard          string
 }

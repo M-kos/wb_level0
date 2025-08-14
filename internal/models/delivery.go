@@ -3,9 +3,12 @@ package models
 type Delivery struct {
 	Name    string
 	Phone   string
-	Zip     string
-	City    string
-	Address string
-	Region  string
+	Address Address
 	Email   string
+}
+type DeliveryDbModel struct {
+	Name      string
+	Phone     string
+	AddressID int
+	Email     string
 }

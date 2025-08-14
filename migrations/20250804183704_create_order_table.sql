@@ -199,23 +199,24 @@ CREATE INDEX idx_order_item_item_order ON order_item ( item_id, order_id );
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS "order";
-DROP TABLE IF EXISTS delivery;
-DROP TABLE IF EXISTS region;
-DROP TABLE IF EXISTS city;
-DROP TABLE IF EXISTS address;
-DROP TABLE IF EXISTS payment;
-DROP TABLE IF EXISTS currency;
-DROP TABLE IF EXISTS provider;
-DROP TABLE IF EXISTS bank;
-DROP TABLE IF EXISTS locale;
-DROP TABLE IF EXISTS delivery_service;
-DROP TABLE IF EXISTS item;
-DROP TABLE IF EXISTS brand;
-DROP TABLE IF EXISTS item_status;
-DROP TABLE IF EXISTS order_item;
-
 DROP INDEX IF EXISTS idx_order_item_item_order;
+
+DROP TABLE IF EXISTS order_item;
+DROP TABLE IF EXISTS "order";
+DROP TABLE IF EXISTS item;
+DROP TABLE IF EXISTS item_status;
+DROP TABLE IF EXISTS brand;
+DROP TABLE IF EXISTS delivery_service;
+DROP TABLE IF EXISTS locale;
+DROP TABLE IF EXISTS payment;
+DROP TABLE IF EXISTS bank;
+DROP TABLE IF EXISTS provider;
+DROP TABLE IF EXISTS currency;
+DROP TABLE IF EXISTS delivery;
+DROP TABLE IF EXISTS address;
+DROP TABLE IF EXISTS city;
+DROP TABLE IF EXISTS region;
+
 -- +goose StatementEnd
 
 
