@@ -2,98 +2,349 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
-	_ "embed"
-	"errors"
 	"fmt"
 	"github.com/M-kos/wb_level0/internal/db"
-	"github.com/M-kos/wb_level0/internal/models"
+	"github.com/M-kos/wb_level0/internal/domains"
 )
 
-var (
-	//go:embed order-queries/create-address.sql
-	createAddress string
-	//go:embed order-queries/create-delivery.sql
-	createDelivery string
-	//go:embed order-queries/create-item.sql
-	createItem string
-	//go:embed order-queries/create-order.sql
-	createOrder string
-	//go:embed order-queries/create-order-item.sql
-	createOrderItem string
-	//go:embed order-queries/create-payment.sql
-	createPayment string
-	//go:embed order-queries/get-order-by-id.sql
-	getOrderById string
-	//go:embed order-queries/get-orders-by-limit.sql
-	getOrdersByLimit string
-)
-
-type OrderRepository struct {
+type orderRepository struct {
 	db *db.PostgresDB
 }
 
-func NewOrderRepository(db *db.PostgresDB) *OrderRepository {
-	return &OrderRepository{db: db}
+func NewOrderRepository(db *db.PostgresDB) (*orderRepository, error) {
+	if db == nil {
+		return nil, fmt.Errorf("db is nil")
+	}
+
+	return &orderRepository{db: db}, nil
 }
 
-func (or *OrderRepository) Create(ctx context.Context, order *models.Order) (int, error) {
-	tx, err := or.db.Pool.Begin(ctx)
-	if err != nil {
+func (or *orderRepository) Create(ctx context.Context, order *domains.Order) (int, error) {
+	row := or.db.Pool.QueryRow(ctx,
+		order.OrderUID,
+		order.TrackNumber,
+		order.Entry,
+		order.Delivery.ID,
+		order.Payment.ID,
+		order.Locale.ID,
+		order.InternalSignature,
+		order.Delivery.Customer.ID,
+		order.DeliveryService.ID,
+		order.Shardkey,
+		order.SmID,
+		order.DateCreated,
+		order.OofShard,
+	)
+
+	var id int
+	if err := row.Scan(&id); err != nil {
 		return 0, err
 	}
 
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback(ctx)
-			return
-		}
-		_ = tx.Commit(ctx)
-	}()
+	return id, nil
+}
 
-	row := tx.QueryRow(ctx, createAddress, order.Delivery.Zip, order.Delivery.Address, order.Delivery.City)
-	var addressId int
-	if err := row.Scan(&addressId); err != nil {
-		return 0, fmt.Errorf("address create error: %w", err)
+func (or *orderRepository) GetById(ctx context.Context, orderId int) (*domains.Order, error) {
+	var order orderModel
+	var delivery deliveryModel
+	var customer customerModel
+	var address addressModel
+	var city cityModel
+	var region regionModel
+	var payment paymentModel
+	var currency currencyModel
+	var provider providerModel
+	var bank bankModel
+	var locale localeModel
+	var deliveryService deliveryServiceModel
+
+	row := or.db.Pool.QueryRow(ctx, getOrderById, orderId)
+
+	if err := row.Scan(
+		&order.ID,
+		&order.OrderUID,
+		&order.TrackNumber,
+		&order.Entry,
+		&delivery.ID,
+		&customer.ID,
+		&customer.FirstName,
+		&customer.LastName,
+		&customer.Phone,
+		&address.ID,
+		&address.Zip,
+		&city.ID,
+		&city.Name,
+		&address.Address,
+		&region.ID,
+		&region.Name,
+		&customer.Email,
+		&payment.ID,
+		&payment.Transaction,
+		&payment.RequestID,
+		&currency.ID,
+		&currency.Name,
+		&provider.ID,
+		&provider.Name,
+		&payment.Amount,
+		&payment.PaymentDt,
+		&bank.ID,
+		&bank.Name,
+		&payment.DeliveryCost,
+		&payment.GoodsTotal,
+		&payment.CustomFee,
+		&locale.ID,
+		&locale.Name,
+		&order.InternalSignature,
+		&order.CustomerID,
+		&deliveryService.ID,
+		&deliveryService.Name,
+		&order.Shardkey,
+		&order.SmID,
+		&order.DateCreated,
+		&order.OofShard,
+	); err != nil {
+		return nil, err
 	}
 
-	row = tx.QueryRow(ctx, createDelivery, order.Delivery.Name, order.Delivery.Phone, order.Delivery.Email, addressId)
-	var deliveryId int
-	if err := row.Scan(&deliveryId); err != nil {
-		return 0, fmt.Errorf("delivery create error: %w", err)
-	}
-
-	//(transaction, request_id, currency_id, provider_id, amount, payment_dt, bank_id, delivery_cost,
-	//                     goods_total, custom_fee)
-	row = tx.QueryRow(ctx, createPayment, order.Payment.Transaction, order.Payment.RequestID, order.Payment.Currency)
-	var addressId int
-	if err := row.Scan(&addressId); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			row = tx.QueryRow(ctx, createAddressQuery, user.Street, user.Zip, cityId)
-
-			if err := row.Scan(&countryId); err != nil {
-				return domain.User{}, err
-			}
-		} else {
-			return domain.User{}, err
-		}
-	}
-
-	row = tx.QueryRow(ctx, createUserQuery, user.Email, user.FullName, addressId)
-
-	err = row.Scan(&user.ID, &user.CreateTime)
+	rows, err := or.db.Pool.Query(ctx, getOrderItemsByOrderId, order.ID)
 	if err != nil {
-		return domain.User{}, err
+		return nil, err
 	}
 
-	return user, nil
-	return 0, nil
+	var itemIds []int
+
+	for rows.Next() {
+		var itemId int
+		if err := rows.Scan(&itemId); err != nil {
+			return nil, err
+		}
+
+		itemIds = append(itemIds, itemId)
+	}
+
+	rows, err = or.db.Pool.Query(ctx, listItemByIds, itemIds)
+	if err != nil {
+		return nil, err
+	}
+
+	var items []itemModel
+
+	for rows.Next() {
+		var item itemModel
+		if err := rows.Scan(
+			&item.ID,
+			&item.ChrtID,
+			&item.TrackNumber,
+			&item.Price,
+			&item.Rid,
+			&item.Name,
+			&item.Sale,
+			&item.Size,
+			&item.TotalPrice,
+			&item.NmID,
+			&item.BrandID,
+			&item.StatusID,
+		); err != nil {
+			return nil, err
+		}
+
+		items = append(items, item)
+	}
+
+	defer rows.Close()
+
+	var dItems []*domains.Item
+
+	for _, item := range items {
+		row := or.db.Pool.QueryRow(ctx, findBrandById, item.BrandID)
+		var brand brandModel
+		if err := row.Scan(&brand.ID, &brand.Name); err != nil {
+			return nil, err
+		}
+
+		row = or.db.Pool.QueryRow(ctx, findItemStatusById, item.StatusID)
+		var status itemStatusModel
+		if err := row.Scan(&status.ID, &status.Value); err != nil {
+			return nil, err
+		}
+
+		dItems = append(dItems, item.toDomain(brand, status))
+	}
+
+	dOrder := order.toDomain(
+		delivery,
+		customer,
+		address,
+		city,
+		region,
+		payment,
+		currency,
+		provider,
+		bank,
+		locale,
+		deliveryService,
+	)
+
+	dOrder.Items = dItems
+
+	return dOrder, nil
 }
 
-func (or *OrderRepository) GetById(ctx context.Context, orderId int) (*models.Order, error) {
-	return &models.Order{}, nil
-}
+func (or *orderRepository) List(ctx context.Context, limit int) ([]*domains.Order, error) {
+	var order orderModel
+	var delivery deliveryModel
+	var customer customerModel
+	var address addressModel
+	var city cityModel
+	var region regionModel
+	var payment paymentModel
+	var currency currencyModel
+	var provider providerModel
+	var bank bankModel
+	var locale localeModel
+	var deliveryService deliveryServiceModel
 
-func (or *OrderRepository) List(ctx context.Context, limit int) ([]*models.Order, error) {
-	return nil, nil
+	rows, err := or.db.Pool.Query(ctx, getOrdersByLimit, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var orders []*domains.Order
+
+	for rows.Next() {
+		if err := rows.Scan(
+			&order.ID,
+			&order.OrderUID,
+			&order.TrackNumber,
+			&order.Entry,
+			&delivery.ID,
+			&customer.ID,
+			&customer.FirstName,
+			&customer.LastName,
+			&customer.Phone,
+			&address.ID,
+			&address.Zip,
+			&city.ID,
+			&city.Name,
+			&address.Address,
+			&region.ID,
+			&region.Name,
+			&customer.Email,
+			&payment.ID,
+			&payment.Transaction,
+			&payment.RequestID,
+			&currency.ID,
+			&currency.Name,
+			&provider.ID,
+			&provider.Name,
+			&payment.Amount,
+			&payment.PaymentDt,
+			&bank.ID,
+			&bank.Name,
+			&payment.DeliveryCost,
+			&payment.GoodsTotal,
+			&payment.CustomFee,
+			&locale.ID,
+			&locale.Name,
+			&order.InternalSignature,
+			&order.CustomerID,
+			&deliveryService.ID,
+			&deliveryService.Name,
+			&order.Shardkey,
+			&order.SmID,
+			&order.DateCreated,
+			&order.OofShard,
+		); err != nil {
+			return nil, err
+		}
+
+		itemIdsRows, err := or.db.Pool.Query(ctx, getOrderItemsByOrderId, order.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		var itemIds []int
+
+		for itemIdsRows.Next() {
+			var itemId int
+			if err := itemIdsRows.Scan(&itemId); err != nil {
+				return nil, err
+			}
+
+			itemIds = append(itemIds, itemId)
+		}
+
+		itemIdsRows.Close()
+
+		itemRows, err := or.db.Pool.Query(ctx, listItemByIds, itemIds)
+		if err != nil {
+			return nil, err
+		}
+
+		var items []itemModel
+
+		for itemRows.Next() {
+			var item itemModel
+			if err := itemRows.Scan(
+				&item.ID,
+				&item.ChrtID,
+				&item.TrackNumber,
+				&item.Price,
+				&item.Rid,
+				&item.Name,
+				&item.Sale,
+				&item.Size,
+				&item.TotalPrice,
+				&item.NmID,
+				&item.BrandID,
+				&item.StatusID,
+			); err != nil {
+				return nil, err
+			}
+
+			items = append(items, item)
+		}
+
+		itemRows.Close()
+
+		var dItems []*domains.Item
+
+		for _, item := range items {
+			row := or.db.Pool.QueryRow(ctx, findBrandById, item.BrandID)
+			var brand brandModel
+			if err := row.Scan(&brand.ID, &brand.Name); err != nil {
+				return nil, err
+			}
+
+			row = or.db.Pool.QueryRow(ctx, findItemStatusById, item.StatusID)
+			var status itemStatusModel
+			if err := row.Scan(&status.ID, &status.Value); err != nil {
+				return nil, err
+			}
+
+			dItems = append(dItems, item.toDomain(brand, status))
+		}
+
+		dOrder := order.toDomain(
+			delivery,
+			customer,
+			address,
+			city,
+			region,
+			payment,
+			currency,
+			provider,
+			bank,
+			locale,
+			deliveryService,
+		)
+
+		dOrder.Items = dItems
+
+		orders = append(orders, dOrder)
+	}
+
+	return orders, nil
 }

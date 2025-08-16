@@ -1,3 +1,3 @@
-INSERT INTO delivery (name, phone, email, address_id)
-VALUES ($1, $2, $3, $4)
+INSERT INTO delivery (customer_id, address_id)
+VALUES ($1, $2)
 RETURNING id;

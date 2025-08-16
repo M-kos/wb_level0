@@ -1,10 +1,24 @@
 -- +goose Up
 -- +goose StatementBegin
 
+CREATE TABLE IF NOT EXISTS customer
+(
+	id         BIGSERIAL,
+	first_name VARCHAR(255) NOT NULL,
+	last_name  VARCHAR(255) NOT NULL,
+	phone      VARCHAR(255) NOT NULL
+		UNIQUE,
+	email      VARCHAR(255)
+		UNIQUE,
+
+	PRIMARY KEY ( id )
+);
+
 CREATE TABLE IF NOT EXISTS region
 (
 	id   BIGSERIAL,
-	name VARCHAR(255) NOT NULL,
+	name VARCHAR(255) NOT NULL
+		UNIQUE,
 
 	PRIMARY KEY ( id )
 );
@@ -32,24 +46,38 @@ CREATE TABLE IF NOT EXISTS address
 		REFERENCES city ( id )
 );
 
+CREATE TABLE IF NOT EXISTS customer_address
+(
+	customer_id BIGINT NOT NULL,
+	address_id  BIGINT NOT NULL,
+
+	PRIMARY KEY ( customer_id, address_id ),
+	FOREIGN KEY ( customer_id )
+		REFERENCES customer ( id )
+		ON DELETE CASCADE,
+	FOREIGN KEY ( address_id )
+		REFERENCES address ( id )
+		ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS delivery
 (
-	id         BIGSERIAL,
-	name       VARCHAR(255) NOT NULL,
-	phone      VARCHAR(255) NOT NULL,
-	email      VARCHAR(255),
-	address_id BIGINT       NOT NULL,
+	id          BIGSERIAL,
+	customer_id BIGINT NOT NULL,
+	address_id  BIGINT NOT NULL,
 
 	PRIMARY KEY ( id ),
 	FOREIGN KEY ( address_id )
-		REFERENCES address ( id )
+		REFERENCES address ( id ),
+	FOREIGN KEY ( customer_id )
+		REFERENCES customer ( id )
 );
-
 
 CREATE TABLE IF NOT EXISTS currency
 (
 	id   BIGSERIAL,
-	name VARCHAR(255) NOT NULL,
+	name VARCHAR(255) NOT NULL
+		UNIQUE,
 
 	PRIMARY KEY ( id )
 );
@@ -57,7 +85,8 @@ CREATE TABLE IF NOT EXISTS currency
 CREATE TABLE IF NOT EXISTS provider
 (
 	id   BIGSERIAL,
-	name VARCHAR(255) NOT NULL,
+	name VARCHAR(255) NOT NULL
+		UNIQUE,
 
 	PRIMARY KEY ( id )
 );
@@ -65,7 +94,8 @@ CREATE TABLE IF NOT EXISTS provider
 CREATE TABLE IF NOT EXISTS bank
 (
 	id   BIGSERIAL,
-	name VARCHAR(255) NOT NULL,
+	name VARCHAR(255) NOT NULL
+		UNIQUE,
 
 	PRIMARY KEY ( id )
 );
@@ -97,7 +127,8 @@ CREATE TABLE IF NOT EXISTS payment
 CREATE TABLE IF NOT EXISTS locale
 (
 	id   BIGSERIAL,
-	name VARCHAR(255) NOT NULL,
+	name VARCHAR(255) NOT NULL
+		UNIQUE,
 
 	PRIMARY KEY ( id )
 );
@@ -105,7 +136,8 @@ CREATE TABLE IF NOT EXISTS locale
 CREATE TABLE IF NOT EXISTS delivery_service
 (
 	id   BIGSERIAL,
-	name VARCHAR(255) NOT NULL,
+	name VARCHAR(255) NOT NULL
+		UNIQUE,
 
 	PRIMARY KEY ( id )
 );
@@ -113,7 +145,8 @@ CREATE TABLE IF NOT EXISTS delivery_service
 CREATE TABLE IF NOT EXISTS brand
 (
 	id   BIGSERIAL,
-	name VARCHAR(255) NOT NULL,
+	name VARCHAR(255) NOT NULL
+		UNIQUE,
 
 	PRIMARY KEY ( id )
 );
@@ -121,7 +154,8 @@ CREATE TABLE IF NOT EXISTS brand
 CREATE TABLE IF NOT EXISTS item_status
 (
 	id    BIGSERIAL,
-	value INT NOT NULL,
+	value INT NOT NULL
+		UNIQUE,
 
 	PRIMARY KEY ( id )
 );
@@ -165,7 +199,7 @@ CREATE TABLE IF NOT EXISTS "order"
 	delivery_service_id BIGINT       NOT NULL,
 	shardkey            VARCHAR(255) NOT NULL,
 	sm_id               INT          NOT NULL,
-	date_created        TIMESTAMP    NOT NULL DEFAULT now( ),
+	date_created        VARCHAR(255) NOT NULL,
 	oof_shard           VARCHAR(255) NOT NULL,
 
 	PRIMARY KEY ( id ),
@@ -195,13 +229,20 @@ CREATE TABLE IF NOT EXISTS order_item
 );
 
 CREATE INDEX idx_order_item_item_order ON order_item ( item_id, order_id );
+CREATE UNIQUE INDEX idx_city_name_region ON city ( name, region_id );
+CREATE UNIQUE INDEX idx_address_zip_address_city ON address ( zip, address, city_id );
+CREATE UNIQUE INDEX idx_delivery_customer_address ON delivery ( customer_id, address_id );
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 DROP INDEX IF EXISTS idx_order_item_item_order;
+DROP INDEX IF EXISTS idx_city_name_region;
+DROP INDEX IF EXISTS idx_address_zip_address_city;
+DROP INDEX IF EXISTS idx_delivery_customer_address;
 
 DROP TABLE IF EXISTS order_item;
+DROP TABLE IF EXISTS customer_address;
 DROP TABLE IF EXISTS "order";
 DROP TABLE IF EXISTS item;
 DROP TABLE IF EXISTS item_status;
@@ -216,6 +257,7 @@ DROP TABLE IF EXISTS delivery;
 DROP TABLE IF EXISTS address;
 DROP TABLE IF EXISTS city;
 DROP TABLE IF EXISTS region;
+DROP TABLE IF EXISTS customer;
 
 -- +goose StatementEnd
 
