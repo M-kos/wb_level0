@@ -161,7 +161,7 @@ type orderModel struct {
 	OofShard          string    `db:"oof_shard"`
 }
 
-func (order *orderModel) toDomain(
+func (orderRepository *orderModel) toDomain(
 	delivery deliveryModel,
 	customer customerModel,
 	address addressModel,
@@ -175,10 +175,10 @@ func (order *orderModel) toDomain(
 	deliveryService deliveryServiceModel,
 ) *domains.Order {
 	return &domains.Order{
-		ID:          order.ID,
-		OrderUID:    order.OrderUID,
-		TrackNumber: order.TrackNumber,
-		Entry:       order.Entry,
+		ID:          orderRepository.ID,
+		OrderUID:    orderRepository.OrderUID,
+		TrackNumber: orderRepository.TrackNumber,
+		Entry:       orderRepository.Entry,
 		Delivery: domains.Delivery{
 			ID: delivery.ID,
 			Customer: domains.Customer{
@@ -208,15 +208,15 @@ func (order *orderModel) toDomain(
 			ID:   locale.ID,
 			Name: locale.Name,
 		},
-		InternalSignature: order.InternalSignature,
-		CustomerID:        order.CustomerID,
+		InternalSignature: orderRepository.InternalSignature,
+		CustomerID:        orderRepository.CustomerID,
 		DeliveryService: domains.DeliveryService{
 			ID:   deliveryService.ID,
 			Name: deliveryService.Name,
 		},
-		Shardkey:    order.Shardkey,
-		SmID:        order.SmID,
-		DateCreated: order.DateCreated,
-		OofShard:    order.OofShard,
+		Shardkey:    orderRepository.Shardkey,
+		SmID:        orderRepository.SmID,
+		DateCreated: orderRepository.DateCreated,
+		OofShard:    orderRepository.OofShard,
 	}
 }

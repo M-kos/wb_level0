@@ -1,5 +1,5 @@
 build:
-	go build -o ./bin/order ./cmd/main.go
+	go build -o ./bin/orderRepository ./cmd/main.go
 
 lint:
 	golangci-lint run ./... -v
@@ -19,10 +19,10 @@ local-api-up-hot:
 	CompileDaemon -exclude-dir=.git -exclude-dir=bin -exclude-dir=openapi -build='make build' -command='./bin/user' -color=true
 
 docker-build:
-	docker build -t order-service:latest -f ./Dockerfile .
+	docker build -t orderRepository-service:latest -f ./Dockerfile .
 
 docker-run:
-	docker run --name order-service -d -p 8080:8080 -e CRM_PORT=8080 order-service:latest
+	docker run --name orderRepository-service -d -p 8080:8080 -e CRM_PORT=8080 orderRepository-service:latest
 
 compose-up:
 	docker compose -f docker-compose.yaml --project-directory=./ up -d --build

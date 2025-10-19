@@ -22,7 +22,7 @@ type KafkaConfig struct {
 	Host     string `envconfig:"KAFKA_HOST" default:"localhost"`
 	Port     string `envconfig:"KAFKA_PORT" default:"9092"`
 	Topic    string `envconfig:"KAFKA_TOPIC" default:"orders"`
-	GroupID  string `envconfig:"KAFKA_GROUP_ID" default:"order-consumer"`
+	GroupID  string `envconfig:"KAFKA_GROUP_ID" default:"orderRepository-consumer"`
 	MinBytes int    `envconfig:"KAFKA_MIN_BYTES" default:"1"`
 	MaxBytes int    `envconfig:"KAFKA_MAX_BYTES" default:"10000000"`
 }

@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS item
 		REFERENCES item_status ( id )
 );
 
-CREATE TABLE IF NOT EXISTS "order"
+CREATE TABLE IF NOT EXISTS "orderRepository"
 (
 	id                  BIGSERIAL,
 	order_uid           VARCHAR(255) NOT NULL
@@ -221,7 +221,7 @@ CREATE TABLE IF NOT EXISTS order_item
 
 	PRIMARY KEY ( order_id, item_id ),
 	FOREIGN KEY ( order_id )
-		REFERENCES "order" ( id )
+		REFERENCES "orderRepository" ( id )
 		ON DELETE CASCADE,
 	FOREIGN KEY ( item_id )
 		REFERENCES item ( id )
@@ -243,7 +243,7 @@ DROP INDEX IF EXISTS idx_delivery_customer_address;
 
 DROP TABLE IF EXISTS order_item;
 DROP TABLE IF EXISTS customer_address;
-DROP TABLE IF EXISTS "order";
+DROP TABLE IF EXISTS "orderRepository";
 DROP TABLE IF EXISTS item;
 DROP TABLE IF EXISTS item_status;
 DROP TABLE IF EXISTS brand;

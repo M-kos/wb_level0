@@ -35,8 +35,8 @@ func (o *OrderCache) LoadCache(ctx context.Context) error {
 
 	o.mu.Lock()
 	defer o.mu.Unlock()
-	for _, order := range orders {
-		o.cache[order.OrderUID] = order
+	for _, orderRepository := range orders {
+		o.cache[orderRepository.OrderUID] = orderRepository
 	}
 
 	return nil
@@ -46,32 +46,32 @@ func (o *OrderCache) Get(orderId string) (*domains.Order, bool) {
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
-	order, ok := o.cache[orderId]
+	orderRepository, ok := o.cache[orderId]
 
-	return order, ok
+	return orderRepository, ok
 }
 
-func (o *OrderCache) Set(order *domains.Order) {
+func (o *OrderCache) Set(orderRepository *domains.Order) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
 	if len(o.cache) < o.config.CacheSize {
-		o.cache[order.OrderUID] = order
+		o.cache[orderRepository.OrderUID] = orderRepository
 		return
 	}
 
-	if _, ok := o.cache[order.OrderUID]; ok {
-		o.cache[order.OrderUID] = order
+	if _, ok := o.cache[orderRepository.OrderUID]; ok {
+		o.cache[orderRepository.OrderUID] = orderRepository
 		return
 	}
 
 	var minDate time.Time
 	var idMinDate string
 
-	for _, order := range o.cache {
-		if order.DateCreated.Before(minDate) {
-			minDate = order.DateCreated
-			idMinDate = order.OrderUID
+	for _, orderRepository := range o.cache {
+		if orderRepository.DateCreated.Before(minDate) {
+			minDate = orderRepository.DateCreated
+			idMinDate = orderRepository.OrderUID
 		}
 	}
 
@@ -79,7 +79,7 @@ func (o *OrderCache) Set(order *domains.Order) {
 		delete(o.cache, idMinDate)
 	}
 
-	o.cache[order.OrderUID] = order
+	o.cache[orderRepository.OrderUID] = orderRepository
 }
 
 func (o *OrderCache) Delete(orderId string) {

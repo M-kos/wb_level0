@@ -30,3 +30,8 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+postgres_data
+zookeeper_data
+zookeeper_datalog
+kafka_data

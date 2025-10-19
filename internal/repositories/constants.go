@@ -85,14 +85,14 @@ var (
 	createPayment string
 	//go:embed payment-queries/find-by-id.sql
 	findPaymentById string
-	//go:embed order-queries/create-order.sql
+	//go:embed orderRepository-queries/create-orderRepository.sql
 	createOrder string
-	//go:embed order-queries/create-order-item.sql
+	//go:embed orderRepository-queries/create-orderRepository-item.sql
 	createOrderItem string
-	//go:embed order-queries/get-order-by-id.sql
+	//go:embed orderRepository-queries/get-orderRepository-by-id.sql
 	getOrderById string
-	//go:embed order-queries/get-order-items-by-order-id.sql
+	//go:embed orderRepository-queries/get-orderRepository-items-by-orderRepository-id.sql
 	getOrderItemsByOrderId string
-	//go:embed order-queries/get-orders-by-limit.sql
+	//go:embed orderRepository-queries/get-orders-by-limit.sql
 	getOrdersByLimit string
 )

@@ -19,21 +19,21 @@ func NewOrderRepository(db *db.PostgresDB) (*OrderRepository, error) {
 	return &OrderRepository{db: db}, nil
 }
 
-func (or *OrderRepository) Create(ctx context.Context, order *domains.Order) (int, error) {
+func (or *OrderRepository) Create(ctx context.Context, orderRepository *domains.Order) (int, error) {
 	row := or.db.Pool.QueryRow(ctx,
-		order.OrderUID,
-		order.TrackNumber,
-		order.Entry,
-		order.Delivery.ID,
-		order.Payment.ID,
-		order.Locale.ID,
-		order.InternalSignature,
-		order.Delivery.Customer.ID,
-		order.DeliveryService.ID,
-		order.Shardkey,
-		order.SmID,
-		order.DateCreated,
-		order.OofShard,
+		orderRepository.OrderUID,
+		orderRepository.TrackNumber,
+		orderRepository.Entry,
+		orderRepository.Delivery.ID,
+		orderRepository.Payment.ID,
+		orderRepository.Locale.ID,
+		orderRepository.InternalSignature,
+		orderRepository.Delivery.Customer.ID,
+		orderRepository.DeliveryService.ID,
+		orderRepository.Shardkey,
+		orderRepository.SmID,
+		orderRepository.DateCreated,
+		orderRepository.OofShard,
 	)
 
 	var id int
@@ -45,7 +45,7 @@ func (or *OrderRepository) Create(ctx context.Context, order *domains.Order) (in
 }
 
 func (or *OrderRepository) GetById(ctx context.Context, orderId string) (*domains.Order, error) {
-	var order orderModel
+	var orderRepository orderModel
 	var delivery deliveryModel
 	var customer customerModel
 	var address addressModel
@@ -61,10 +61,10 @@ func (or *OrderRepository) GetById(ctx context.Context, orderId string) (*domain
 	row := or.db.Pool.QueryRow(ctx, getOrderById, orderId)
 
 	if err := row.Scan(
-		&order.ID,
-		&order.OrderUID,
-		&order.TrackNumber,
-		&order.Entry,
+		&orderRepository.ID,
+		&orderRepository.OrderUID,
+		&orderRepository.TrackNumber,
+		&orderRepository.Entry,
 		&delivery.ID,
 		&customer.ID,
 		&customer.FirstName,
@@ -94,19 +94,19 @@ func (or *OrderRepository) GetById(ctx context.Context, orderId string) (*domain
 		&payment.CustomFee,
 		&locale.ID,
 		&locale.Name,
-		&order.InternalSignature,
-		&order.CustomerID,
+		&orderRepository.InternalSignature,
+		&orderRepository.CustomerID,
 		&deliveryService.ID,
 		&deliveryService.Name,
-		&order.Shardkey,
-		&order.SmID,
-		&order.DateCreated,
-		&order.OofShard,
+		&orderRepository.Shardkey,
+		&orderRepository.SmID,
+		&orderRepository.DateCreated,
+		&orderRepository.OofShard,
 	); err != nil {
 		return nil, err
 	}
 
-	rows, err := or.db.Pool.Query(ctx, getOrderItemsByOrderId, order.ID)
+	rows, err := or.db.Pool.Query(ctx, getOrderItemsByOrderId, orderRepository.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (or *OrderRepository) GetById(ctx context.Context, orderId string) (*domain
 		dItems = append(dItems, item.toDomain(brand, status))
 	}
 
-	dOrder := order.toDomain(
+	dOrder := orderRepository.toDomain(
 		delivery,
 		customer,
 		address,
@@ -191,7 +191,7 @@ func (or *OrderRepository) GetById(ctx context.Context, orderId string) (*domain
 }
 
 func (or *OrderRepository) List(ctx context.Context, limit int) ([]*domains.Order, error) {
-	var order orderModel
+	var orderRepository orderModel
 	var delivery deliveryModel
 	var customer customerModel
 	var address addressModel
@@ -215,10 +215,10 @@ func (or *OrderRepository) List(ctx context.Context, limit int) ([]*domains.Orde
 
 	for rows.Next() {
 		if err := rows.Scan(
-			&order.ID,
-			&order.OrderUID,
-			&order.TrackNumber,
-			&order.Entry,
+			&orderRepository.ID,
+			&orderRepository.OrderUID,
+			&orderRepository.TrackNumber,
+			&orderRepository.Entry,
 			&delivery.ID,
 			&customer.ID,
 			&customer.FirstName,
@@ -248,19 +248,19 @@ func (or *OrderRepository) List(ctx context.Context, limit int) ([]*domains.Orde
 			&payment.CustomFee,
 			&locale.ID,
 			&locale.Name,
-			&order.InternalSignature,
-			&order.CustomerID,
+			&orderRepository.InternalSignature,
+			&orderRepository.CustomerID,
 			&deliveryService.ID,
 			&deliveryService.Name,
-			&order.Shardkey,
-			&order.SmID,
-			&order.DateCreated,
-			&order.OofShard,
+			&orderRepository.Shardkey,
+			&orderRepository.SmID,
+			&orderRepository.DateCreated,
+			&orderRepository.OofShard,
 		); err != nil {
 			return nil, err
 		}
 
-		itemIdsRows, err := or.db.Pool.Query(ctx, getOrderItemsByOrderId, order.ID)
+		itemIdsRows, err := or.db.Pool.Query(ctx, getOrderItemsByOrderId, orderRepository.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -327,7 +327,7 @@ func (or *OrderRepository) List(ctx context.Context, limit int) ([]*domains.Orde
 			dItems = append(dItems, item.toDomain(brand, status))
 		}
 
-		dOrder := order.toDomain(
+		dOrder := orderRepository.toDomain(
 			delivery,
 			customer,
 			address,
