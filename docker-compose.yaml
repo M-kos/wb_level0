@@ -136,6 +136,16 @@ services:
       DB_PORT: ${POSTGRES_PORT}
       DB_HOST: ${POSTGRES_HOST}
 
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    depends_on:
+      - order_service
+    ports:
+      - "3001:3001"
+    restart: always
+
 volumes:
   postgres_data:
   zookeeper_data:
