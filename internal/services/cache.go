@@ -51,17 +51,17 @@ func (o *OrderCache) Get(orderId string) (*domains.Order, bool) {
 	return orderRepository, ok
 }
 
-func (o *OrderCache) Set(orderRepository *domains.Order) {
+func (o *OrderCache) Set(order *domains.Order) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
 	if len(o.cache) < o.config.CacheSize {
-		o.cache[orderRepository.OrderUID] = orderRepository
+		o.cache[order.OrderUID] = order
 		return
 	}
 
-	if _, ok := o.cache[orderRepository.OrderUID]; ok {
-		o.cache[orderRepository.OrderUID] = orderRepository
+	if _, ok := o.cache[order.OrderUID]; ok {
+		o.cache[order.OrderUID] = order
 		return
 	}
 
@@ -79,7 +79,7 @@ func (o *OrderCache) Set(orderRepository *domains.Order) {
 		delete(o.cache, idMinDate)
 	}
 
-	o.cache[orderRepository.OrderUID] = orderRepository
+	o.cache[order.OrderUID] = order
 }
 
 func (o *OrderCache) Delete(orderId string) {
