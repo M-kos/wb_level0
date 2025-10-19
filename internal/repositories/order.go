@@ -7,19 +7,19 @@ import (
 	"github.com/M-kos/wb_level0/internal/domains"
 )
 
-type orderRepository struct {
+type OrderRepository struct {
 	db *db.PostgresDB
 }
 
-func NewOrderRepository(db *db.PostgresDB) (*orderRepository, error) {
+func NewOrderRepository(db *db.PostgresDB) (*OrderRepository, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
 
-	return &orderRepository{db: db}, nil
+	return &OrderRepository{db: db}, nil
 }
 
-func (or *orderRepository) Create(ctx context.Context, order *domains.Order) (int, error) {
+func (or *OrderRepository) Create(ctx context.Context, order *domains.Order) (int, error) {
 	row := or.db.Pool.QueryRow(ctx,
 		order.OrderUID,
 		order.TrackNumber,
@@ -44,7 +44,7 @@ func (or *orderRepository) Create(ctx context.Context, order *domains.Order) (in
 	return id, nil
 }
 
-func (or *orderRepository) GetById(ctx context.Context, orderId int) (*domains.Order, error) {
+func (or *OrderRepository) GetById(ctx context.Context, orderId string) (*domains.Order, error) {
 	var order orderModel
 	var delivery deliveryModel
 	var customer customerModel
@@ -190,7 +190,7 @@ func (or *orderRepository) GetById(ctx context.Context, orderId int) (*domains.O
 	return dOrder, nil
 }
 
-func (or *orderRepository) List(ctx context.Context, limit int) ([]*domains.Order, error) {
+func (or *OrderRepository) List(ctx context.Context, limit int) ([]*domains.Order, error) {
 	var order orderModel
 	var delivery deliveryModel
 	var customer customerModel

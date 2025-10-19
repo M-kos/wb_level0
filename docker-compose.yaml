@@ -16,20 +16,69 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
 
-#  migrations-up:
-#    image: kukymbr/goose-docker:latest
-#    volumes:
-#      - ./migrations:/migrations
-#    environment:
-#      GOOSE_DRIVER: ${GOOSE_DRIVER}
-#      GOOSE_DBSTRING: ${GOOSE_DBSTRING}
-#      GOOSE_MIGRATION_DIR: ${GOOSE_MIGRATION_DIR}
-#      GOOSE_TABLE: ${GOOSE_TABLE}
-#    command: "goose -dir /migrations up"
-#    depends_on:
-#      postgres:
-#        condition:
-#          service_healthy
+  zookeeper:
+    image: apache/zookeeper:latest
+    container_name: zookeeper
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_CLIENT_PORT}
+      ZOOKEEPER_TICK_TIME: ${ZOOKEEPER_TICK_TIME}
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    ports:
+      - ${ZOOKEEPER_CLIENT_PORT}:${ZOOKEEPER_CLIENT_PORT}
+    volumes:
+      - zookeeper_data:/zookeeper/data
+      - zookeeper_datalog:/zookeeper/datalog
+
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    restart: always
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_CLIENT_PORT}
+      KAFKA_LISTENERS: PLAINTEXT://${KAFKA_HOST}:${KAFKA_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_HOST}:${KAFKA_PORT}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP}
+      KAFKA_INTER_BROKER_LISTENER_NAME: ${KAFKA_INTER_BROKER_LISTENER_NAME}
+      KAFKA_NUM_PARTITIONS: ${KAFKA_NUM_PARTITIONS}
+      KAFKA_DEFAULT_REPLICATION_FACTOR: ${KAFKA_DEFAULT_REPLICATION_FACTOR}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+    ports:
+      - ${KAFKA_PORT}:${KAFKA_PORT}
+    volumes:
+      - kafka_data:/kafka
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - ${KAFKA_UI_HOST_PORT}:${KAFKA_UI_CONTAINER_PORT}
+    restart: always
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:${KAFKA_PORT}
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:${ZOOKEEPER_CLIENT_PORT}
+      DYNAMIC_CONFIG_ENABLED: "true"
+
+  migrations-up:
+    image: kukymbr/goose-docker:latest
+    volumes:
+      - ./migrations:/migrations
+    environment:
+      GOOSE_DRIVER: ${GOOSE_DRIVER}
+      GOOSE_DBSTRING: ${GOOSE_DBSTRING}
+      GOOSE_MIGRATION_DIR: ${GOOSE_MIGRATION_DIR}
+      GOOSE_TABLE: ${GOOSE_TABLE}
+    command: "goose -dir /migrations up"
+    depends_on:
+      postgres:
+        condition:
+          service_healthy
 #  migrations-down:
 #    image: kukymbr/goose-docker:latest
 #    volumes:
@@ -47,6 +96,23 @@ services:
 #    profiles:
 #      - migrations-down
 
+
+#  migrate:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    depends_on:
+#      - db
+#    environment:
+#      DB_HOST: db
+#      DB_PORT: 5432
+#      DB_USER: orders_user
+#      DB_PASSWORD: password
+#      DB_NAME: orders_db
+#      DB_SSLMODE: disable
+#    command: ["goose", "-dir", "migrations", "postgres", "user=orders_user password=password dbname=orders_db sslmode=disable host=db", "up"]
+#    restart: on-failure
+
   order_service:
     container_name: order_service
     image: order-service:latest
@@ -56,6 +122,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      kafka:
+        condition: service_started
+      migrations-up:
+        condition: service_completed_successfully
     ports:
       - ${SERVICE_PORT}:${SERVICE_PORT}
     environment:
@@ -68,3 +138,6 @@ services:
 
 volumes:
   postgres_data:
+  zookeeper_data:
+  zookeeper_datalog:
+  kafka_data:

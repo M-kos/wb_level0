@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS "order"
 	delivery_service_id BIGINT       NOT NULL,
 	shardkey            VARCHAR(255) NOT NULL,
 	sm_id               INT          NOT NULL,
-	date_created        VARCHAR(255) NOT NULL,
+	date_created        TIMESTAMP    NOT NULL,
 	oof_shard           VARCHAR(255) NOT NULL,
 
 	PRIMARY KEY ( id ),

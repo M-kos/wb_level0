@@ -1,6 +1,9 @@
 package repositories
 
-import "github.com/M-kos/wb_level0/internal/domains"
+import (
+	"github.com/M-kos/wb_level0/internal/domains"
+	"time"
+)
 
 type addressModel struct {
 	ID      int    `db:"id"`
@@ -42,8 +45,8 @@ type deliveryServiceModel struct {
 }
 
 type itemStatusModel struct {
-	ID    int    `db:"id"`
-	Value string `db:"value"`
+	ID    int `db:"id"`
+	Value int `db:"value"`
 }
 
 type localeModel struct {
@@ -142,20 +145,20 @@ func (p *paymentModel) toDomain(cur currencyModel, bank bankModel, provider prov
 }
 
 type orderModel struct {
-	ID                int    `db:"id"`
-	OrderUID          string `db:"order_uid"`
-	TrackNumber       string `db:"track_number"`
-	Entry             string `db:"entry"`
-	DeliveryID        int    `db:"delivery_id"`
-	PaymentID         int    `db:"payment_id"`
-	LocaleID          int    `db:"locale_id"`
-	InternalSignature string `db:"internal_signature"`
-	CustomerID        string `db:"customer_id"`
-	DeliveryServiceID int    `db:"delivery_service_id"`
-	Shardkey          string `db:"shardkey"`
-	SmID              int    `db:"sm_id"`
-	DateCreated       string `db:"date_created"`
-	OofShard          string `db:"oof_shard"`
+	ID                int       `db:"id"`
+	OrderUID          string    `db:"order_uid"`
+	TrackNumber       string    `db:"track_number"`
+	Entry             string    `db:"entry"`
+	DeliveryID        int       `db:"delivery_id"`
+	PaymentID         int       `db:"payment_id"`
+	LocaleID          int       `db:"locale_id"`
+	InternalSignature string    `db:"internal_signature"`
+	CustomerID        string    `db:"customer_id"`
+	DeliveryServiceID int       `db:"delivery_service_id"`
+	Shardkey          string    `db:"shardkey"`
+	SmID              int       `db:"sm_id"`
+	DateCreated       time.Time `db:"date_created"`
+	OofShard          string    `db:"oof_shard"`
 }
 
 func (order *orderModel) toDomain(

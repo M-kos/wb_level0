@@ -23,8 +23,6 @@ func NewDB(ctx context.Context, config *config.Config, log logger.Logger) (*Post
 		return nil, fmt.Errorf("postgres connection: %w", err)
 	}
 
-	defer pool.Close()
-
 	if err := pool.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("ping postgres: %w", err)
 	}

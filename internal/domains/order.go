@@ -1,5 +1,7 @@
 package domains
 
+import "time"
+
 type Order struct {
 	ID                int
 	OrderUID          string
@@ -14,6 +16,6 @@ type Order struct {
 	DeliveryService   DeliveryService
 	Shardkey          string
 	SmID              int
-	DateCreated       string
+	DateCreated       time.Time
 	OofShard          string
 }
