@@ -1,4 +1,4 @@
 export const routes = {
   home: '/',
-  order: 'orderRepository/:orderId',
+  order: 'order/:orderId',
 };

@@ -15,7 +15,7 @@ export const Home = () => {
     <Card styles={{ body: { width: 400, height: 300 } }}>
       <Flex style={{ height: '100%' }} vertical gap={24} justify={'center'} align={'stretch'}>
         <Input
-          placeholder={'Enter the orderRepository UUID'}
+          placeholder={'Enter the order UUID'}
           size={'large'}
           value={uuid}
           onChange={onChange}
