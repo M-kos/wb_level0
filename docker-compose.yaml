@@ -16,53 +16,48 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
 
-  zookeeper:
-    image: apache/zookeeper:latest
-    container_name: zookeeper
-    restart: always
-    environment:
-      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_CLIENT_PORT}
-      ZOOKEEPER_TICK_TIME: ${ZOOKEEPER_TICK_TIME}
-      ALLOW_ANONYMOUS_LOGIN: "yes"
-    ports:
-      - ${ZOOKEEPER_CLIENT_PORT}:${ZOOKEEPER_CLIENT_PORT}
-    volumes:
-      - zookeeper_data:/zookeeper/data
-      - zookeeper_datalog:/zookeeper/datalog
-
   kafka:
     image: apache/kafka:latest
     container_name: kafka
     restart: always
-    depends_on:
-      - zookeeper
     environment:
-      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_CLIENT_PORT}
-      KAFKA_LISTENERS: PLAINTEXT://${KAFKA_HOST}:${KAFKA_PORT}
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_HOST}:${KAFKA_PORT}
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP}
-      KAFKA_INTER_BROKER_LISTENER_NAME: ${KAFKA_INTER_BROKER_LISTENER_NAME}
-      KAFKA_NUM_PARTITIONS: ${KAFKA_NUM_PARTITIONS}
-      KAFKA_DEFAULT_REPLICATION_FACTOR: ${KAFKA_DEFAULT_REPLICATION_FACTOR}
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      KAFKA_NODE_ID: ${KAFKA_NODE_ID}
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:${KAFKA_PORT},EXTERNAL://0.0.0.0:${KAFKA_EXTERNAL_PORT},CONTROLLER://0.0.0.0:${KAFKA_CONTROLLER_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:${KAFKA_PORT},EXTERNAL://localhost:${KAFKA_EXTERNAL_PORT}
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:${KAFKA_CONTROLLER_PORT}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - ${KAFKA_PORT}:${KAFKA_PORT}
+      - ${KAFKA_CONTROLLER_PORT}:${KAFKA_CONTROLLER_PORT}
+      - ${KAFKA_EXTERNAL_PORT}:${KAFKA_EXTERNAL_PORT}
     volumes:
-      - kafka_data:/kafka
+      - ./kafka_data:/var/lib/kafka/data
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
+    restart: always
     ports:
       - ${KAFKA_UI_HOST_PORT}:${KAFKA_UI_CONTAINER_PORT}
-    restart: always
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:${KAFKA_PORT}
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:${ZOOKEEPER_CLIENT_PORT}
       DYNAMIC_CONFIG_ENABLED: "true"
 
   migrations-up:
@@ -79,39 +74,6 @@ services:
       postgres:
         condition:
           service_healthy
-#  migrations-down:
-#    image: kukymbr/goose-docker:latest
-#    volumes:
-#      - ./migrations:/migrations
-#    environment:
-#      GOOSE_DRIVER: ${GOOSE_DRIVER}
-#      GOOSE_DBSTRING: ${GOOSE_DBSTRING}
-#      GOOSE_MIGRATION_DIR: ${GOOSE_MIGRATION_DIR}
-#      GOOSE_TABLE: ${GOOSE_TABLE}
-#    command: "goose -dir /migrations down"
-#    depends_on:
-#      postgres:
-#        condition:
-#          service_healthy
-#    profiles:
-#      - migrations-down
-
-
-#  migrate:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    depends_on:
-#      - db
-#    environment:
-#      DB_HOST: db
-#      DB_PORT: 5432
-#      DB_USER: orders_user
-#      DB_PASSWORD: password
-#      DB_NAME: orders_db
-#      DB_SSLMODE: disable
-#    command: ["goose", "-dir", "migrations", "postgres", "user=orders_user password=password dbname=orders_db sslmode=disable host=db", "up"]
-#    restart: on-failure
 
   order_service:
     container_name: order_service
@@ -123,7 +85,7 @@ services:
       postgres:
         condition: service_healthy
       kafka:
-        condition: service_started
+        condition: service_healthy
       migrations-up:
         condition: service_completed_successfully
     ports:
@@ -134,7 +96,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_NAME}
       DB_PORT: ${POSTGRES_PORT}
-      DB_HOST: ${POSTGRES_HOST}
+      DB_HOST: ${DB_HOST}
 
   client:
     build:
@@ -142,12 +104,11 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - order_service
+    container_name: wb-client
     ports:
       - "3001:3001"
     restart: always
 
 volumes:
   postgres_data:
-  zookeeper_data:
-  zookeeper_datalog:
   kafka_data:

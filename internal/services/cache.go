@@ -35,8 +35,8 @@ func (o *OrderCache) LoadCache(ctx context.Context) error {
 
 	o.mu.Lock()
 	defer o.mu.Unlock()
-	for _, orderRepository := range orders {
-		o.cache[orderRepository.OrderUID] = orderRepository
+	for _, order := range orders {
+		o.cache[order.OrderUID] = order
 	}
 
 	return nil
@@ -46,9 +46,9 @@ func (o *OrderCache) Get(orderId string) (*domains.Order, bool) {
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
-	orderRepository, ok := o.cache[orderId]
+	order, ok := o.cache[orderId]
 
-	return orderRepository, ok
+	return order, ok
 }
 
 func (o *OrderCache) Set(order *domains.Order) {
@@ -68,10 +68,10 @@ func (o *OrderCache) Set(order *domains.Order) {
 	var minDate time.Time
 	var idMinDate string
 
-	for _, orderRepository := range o.cache {
-		if orderRepository.DateCreated.Before(minDate) {
-			minDate = orderRepository.DateCreated
-			idMinDate = orderRepository.OrderUID
+	for _, order := range o.cache {
+		if order.DateCreated.Before(minDate) {
+			minDate = order.DateCreated
+			idMinDate = order.OrderUID
 		}
 	}
 
