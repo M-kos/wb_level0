@@ -32,6 +32,5 @@ go.work.sum
 # .vscode/
 
 postgres_data
-zookeeper_data
-zookeeper_datalog
 kafka_data
+bin
