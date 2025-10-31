@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"fmt"
 	"github.com/M-kos/wb_level0/internal/db"
 	"github.com/M-kos/wb_level0/internal/domains"
 	"time"
@@ -34,21 +33,18 @@ func (or *OrderRepository) Create(ctx context.Context, order *domains.Order) (in
 	var regionId int
 	row := tx.QueryRow(ctx, createRegion, order.Delivery.Address.Region.Name)
 	if err = row.Scan(&regionId); err != nil {
-		fmt.Println("[createRegion]:", err.Error())
 		return 0, err
 	}
 
 	var cityId int
 	row = tx.QueryRow(ctx, createCity, order.Delivery.Address.City.Name, regionId)
 	if err = row.Scan(&cityId); err != nil {
-		fmt.Println("[createCity]:", err.Error())
 		return 0, err
 	}
 
 	var addressId int
 	row = tx.QueryRow(ctx, createAddress, order.Delivery.Address.Zip, order.Delivery.Address.Address, cityId)
 	if err = row.Scan(&addressId); err != nil {
-		fmt.Println("[createAddress]:", err.Error())
 		return 0, err
 	}
 
@@ -62,35 +58,30 @@ func (or *OrderRepository) Create(ctx context.Context, order *domains.Order) (in
 		order.Delivery.Customer.Email,
 	)
 	if err = row.Scan(&customerId); err != nil {
-		fmt.Println("[createCustomer]:", err.Error())
 		return 0, err
 	}
 
 	var deliveryId int
 	row = tx.QueryRow(ctx, createDelivery, customerId, addressId)
 	if err = row.Scan(&deliveryId); err != nil {
-		fmt.Println("[createDelivery]:", err.Error())
 		return 0, err
 	}
 
 	var currencyId int
 	row = tx.QueryRow(ctx, createCurrency, order.Payment.Currency.Name)
 	if err = row.Scan(&currencyId); err != nil {
-		fmt.Println("[createCurrency]:", err.Error())
 		return 0, err
 	}
 
 	var providerId int
 	row = tx.QueryRow(ctx, createProvider, order.Payment.Provider.Name)
 	if err = row.Scan(&providerId); err != nil {
-		fmt.Println("[createProvider]:", err.Error())
 		return 0, err
 	}
 
 	var bankId int
 	row = tx.QueryRow(ctx, createBank, order.Payment.Bank.Name)
 	if err = row.Scan(&bankId); err != nil {
-		fmt.Println("[createBank]:", err.Error())
 		return 0, err
 	}
 
@@ -111,21 +102,18 @@ func (or *OrderRepository) Create(ctx context.Context, order *domains.Order) (in
 		order.Payment.CustomFee,
 	)
 	if err = row.Scan(&paymentId); err != nil {
-		fmt.Println("[createPayment]:", err.Error())
 		return 0, err
 	}
 
 	var localeId int
 	row = tx.QueryRow(ctx, createLocale, order.Locale.Name)
 	if err = row.Scan(&localeId); err != nil {
-		fmt.Println("[createLocale]:", err.Error())
 		return 0, err
 	}
 
 	var deliveryServiceId int
 	row = tx.QueryRow(ctx, createDeliveryService, order.DeliveryService.Name)
 	if err = row.Scan(&deliveryServiceId); err != nil {
-		fmt.Println("[deliveryServiceId]:", err.Error())
 		return 0, err
 	}
 
@@ -146,25 +134,19 @@ func (or *OrderRepository) Create(ctx context.Context, order *domains.Order) (in
 		order.OofShard,
 	)
 	if err := row.Scan(&orderId); err != nil {
-		fmt.Println("[createOrder]:", err.Error())
 		return 0, err
 	}
 
-	fmt.Println("prder.Items", order.Items)
-
-	for i, item := range order.Items {
-		fmt.Println("Item", item)
+	for _, item := range order.Items {
 		var brandId int
 		row = tx.QueryRow(ctx, createBrand, item.Brand.Name)
 		if err = row.Scan(&brandId); err != nil {
-			fmt.Println("[createBrand]:", i, err.Error())
 			return 0, err
 		}
 
 		var statusId int
 		row = tx.QueryRow(ctx, createItemStatus, item.Status.Value)
 		if err = row.Scan(&statusId); err != nil {
-			fmt.Println("[createItemStatus]:", i, err.Error())
 			return 0, err
 		}
 
@@ -183,13 +165,11 @@ func (or *OrderRepository) Create(ctx context.Context, order *domains.Order) (in
 			statusId,
 		)
 		if err := row.Scan(&itemId); err != nil {
-			fmt.Println("[createItem]:", i, err.Error())
 			return 0, err
 		}
 
 		_, err = tx.Exec(ctx, createOrderItem, orderId, itemId)
 		if err != nil {
-			fmt.Println("[createOrderItem]:", i, err.Error())
 			return 0, err
 		}
 	}

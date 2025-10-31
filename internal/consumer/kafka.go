@@ -25,8 +25,6 @@ func NewKafkaConsumer(config *config.Config, logger logger.Logger) (*KafkaConsum
 	broker.WriteString(config.Kafka.Port)
 	brokers = append(brokers, broker.String())
 
-	fmt.Println(brokers)
-
 	kafkaConfig := sarama.NewConfig()
 
 	client, err := sarama.NewConsumerGroup(brokers, config.Kafka.GroupID, kafkaConfig)

@@ -23,8 +23,6 @@ func NewKafkaProducer(config *config.Config) (*KafkaProducer, error) {
 	broker.WriteString(config.Kafka.ExternalPort)
 	brokers = append(brokers, broker.String())
 
-	fmt.Println(brokers)
-
 	kafkaConfig := sarama.NewConfig()
 	kafkaConfig.Producer.RequiredAcks = sarama.WaitForAll
 	kafkaConfig.Producer.Return.Successes = true
