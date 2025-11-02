@@ -28,6 +28,7 @@ func NewKafkaOrderHandler(service Service) *KafkaOrderHandler {
 
 func (koh *KafkaOrderHandler) HandleMessage(ctx context.Context, value []byte) error {
 	var order dto.Order
+	var order2 dto.Order
 	if err := json.Unmarshal(value, &order); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}
