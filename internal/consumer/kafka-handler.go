@@ -28,7 +28,7 @@ func NewConsumerHandler(service HandlerService, config *config.Config, logger lo
 	brokers := make([]string, 0, 1)
 	var broker strings.Builder
 
-	broker.WriteString(config.BrokerHost)
+	broker.WriteString(config.Kafka.Host)
 	broker.WriteString(":")
 	broker.WriteString(config.Kafka.Port)
 	brokers = append(brokers, broker.String())
@@ -63,11 +63,11 @@ func (kh *KafkaHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim 
 				return nil
 			}
 
-			kh.logger.Info("message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
+			kh.logger.Info("message claimed", "value", string(message.Value), "timestamp", message.Timestamp, "topic", message.Topic)
 
 			err := kh.service.HandleMessage(session.Context(), message.Value)
 			if err != nil {
-				kh.logger.Error("error handling message", "Error", err)
+				kh.logger.Error("error handling message", "msg", err)
 
 				if kh.config.Kafka.DlqTopic != "" {
 					dlqMsg := &sarama.ProducerMessage{
@@ -81,7 +81,7 @@ func (kh *KafkaHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim 
 							break
 						}
 
-						kh.logger.Error("failed to send to DLQ: %v", pErr)
+						kh.logger.Error("failed to send to DLQ", "msg", pErr)
 
 						if strings.Contains(pErr.Error(), "connection") || strings.Contains(pErr.Error(), "timeout") {
 							time.Sleep(time.Duration(attempt) * time.Second)

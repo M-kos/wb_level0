@@ -81,7 +81,7 @@ func run() error {
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Error("listen and serve: %v", err)
+			log.Error("listen and serve", "msg", err.Error())
 			cancel()
 		}
 	}()
@@ -95,11 +95,11 @@ func run() error {
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Error("shutdown server error: %s", err.Error())
+		log.Error("shutdown server error", "msg", err.Error())
 	}
 
 	if err := kafkaConsumer.Close(); err != nil {
-		log.Error("shutdown consumer error: %s", err.Error())
+		log.Error("shutdown consumer error", "msg", err.Error())
 	}
 
 	postgresDb.Pool.Close()

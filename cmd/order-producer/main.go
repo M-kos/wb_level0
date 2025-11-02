@@ -14,14 +14,14 @@ func main() {
 
 	kp, err := producer.NewKafkaProducer(conf)
 	if err != nil {
-		log.Error("failed to init producer", "error", err)
+		log.Error("failed to init producer", "msg", err)
 		return
 	}
 
 	defer func() {
 		err := kp.Close()
 		if err != nil {
-			log.Error("failed to close kafka producer", "error", err)
+			log.Error("failed to close kafka producer", "msg", err)
 		}
 	}()
 
@@ -38,7 +38,7 @@ func main() {
 			continue
 		}
 
-		log.Info("sent order", "order_uid", order["order_uid"])
+		log.Info("sent order", "order uid", order["order_uid"])
 		time.Sleep(500 * time.Millisecond)
 	}
 

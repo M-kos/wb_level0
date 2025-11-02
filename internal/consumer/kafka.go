@@ -20,7 +20,7 @@ func NewKafkaConsumer(config *config.Config, logger logger.Logger) (*KafkaConsum
 	brokers := make([]string, 0, 1)
 	var broker strings.Builder
 
-	broker.WriteString(config.BrokerHost)
+	broker.WriteString(config.Kafka.Host)
 	broker.WriteString(":")
 	broker.WriteString(config.Kafka.Port)
 	brokers = append(brokers, broker.String())
@@ -59,7 +59,7 @@ func (k *KafkaConsumer) RunConsume(ctx context.Context, handler sarama.ConsumerG
 					return fmt.Errorf("kafka consumer failed after %d retries: %w", k.config.Kafka.MaxRetries, err)
 				}
 
-				k.logger.Error("error from consume", "Error", err)
+				k.logger.Error("error from consume", "msg", err)
 				time.Sleep(time.Duration(retryCount) * time.Second)
 				continue
 			}

@@ -3,11 +3,13 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/M-kos/wb_level0/internal/config"
 	"github.com/M-kos/wb_level0/internal/domains"
 	"github.com/M-kos/wb_level0/internal/dto"
 	"github.com/M-kos/wb_level0/internal/logger"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5"
 	"net/http"
 	"strings"
 )
@@ -27,7 +29,7 @@ func (oh *OrderHandler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 	validate := validator.New()
 
 	if err := validate.Var(orderId, "required"); err != nil {
-		oh.logger.Error("[GetOrderById] order id validation err: ", err)
+		oh.logger.Error("[GetOrderById] order id validation err", "msg", err)
 		http.Error(w, "invalid order id", http.StatusBadRequest)
 		return
 	}
@@ -40,7 +42,12 @@ func (oh *OrderHandler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 	default:
 		order, err := oh.service.GetById(r.Context(), orderId)
 		if err != nil {
-			oh.logger.Error("[GetOrderById] get order by id err: ", err)
+			if errors.Is(err, pgx.ErrNoRows) {
+				oh.logger.Error("[GetOrderById] order not found", "msg", err)
+				http.Error(w, "order not found", http.StatusNotFound)
+				return
+			}
+			oh.logger.Error("[GetOrderById] get order by id err", "msg", err)
 			http.Error(w, "something went wrong", http.StatusInternalServerError)
 			return
 		}
@@ -108,7 +115,7 @@ func (oh *OrderHandler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 		})
 
 		if err != nil {
-			oh.logger.Error("[GetOrderById] encode response err: ", err)
+			oh.logger.Error("[GetOrderById] encode response err", "msg", err)
 			http.Error(w, "something went wrong", http.StatusInternalServerError)
 			return
 		}
