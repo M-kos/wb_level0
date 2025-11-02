@@ -13,11 +13,11 @@ clean-bin:
 tidy:
 	go mod tidy -v
 
-local-api-up:
+local-run:
 	go run ./cmd/order-app/main.go
 
 # https://github.com/githubnemo/CompileDaemon
-local-api-up-hot:
+local-run-hot:
 	CompileDaemon -exclude-dir=.git -exclude-dir=bin -exclude-dir=openapi -build='make build' -command='./bin/user' -color=true
 
 docker-build:
@@ -29,10 +29,13 @@ docker-run:
 compose-up:
 	docker compose -f docker-compose.yaml --project-directory=./ up -d --build
 
+compose-up-local:
+	docker compose -f docker-compose.yaml up -d --build \
+		postgres kafka kafka-ui migrations-up
+
+local-dev: compose-up-local local-run
+
 compose-down:
 	docker compose -v -f docker-compose.yaml --project-directory=./ down
 
-migrate-down:
-	docker compose --profile migration-down -f docker-compose.yaml up
-
-.PHONY: generate-openapi build build-with-generate lint clean-bin tidy dev-up dev-down dev-api-test dev-db local-api-up local-api-up-hot docker-build docker-run compose-up compose-down migrate-down
+.PHONY: build build-producer lint clean-bin tidy local-run local-run-hot docker-build docker-run compose-up compose-up-local compose-down local-dev
