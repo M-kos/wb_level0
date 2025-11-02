@@ -52,7 +52,7 @@ func ConnectionString(config *config.Config) string {
 	value := url.URL{
 		Scheme:   DBScheme,
 		User:     url.UserPassword(config.Postgres.User, config.Postgres.Password),
-		Host:     net.JoinHostPort(config.DbHost, config.Postgres.Port),
+		Host:     net.JoinHostPort(config.Postgres.Host, config.Postgres.Port),
 		Path:     config.Postgres.Name,
 		RawQuery: query.Encode(),
 	}
