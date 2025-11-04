@@ -98,7 +98,7 @@ var order = &domains.Order{
 	OofShard:    "1",
 }
 
-var AddError = errors.New("add error")
+var ErrorAddOrder = errors.New("add error")
 
 type StubRepository struct {
 	store map[string]*domains.Order
@@ -116,7 +116,7 @@ func (sr *StubRepository) GetById(ctx context.Context, orderId string) (*domains
 
 func (sr *StubRepository) Create(ctx context.Context, order *domains.Order) (int, error) {
 	if sr.store == nil {
-		return 0, AddError
+		return 0, ErrorAddOrder
 	}
 	_ = ctx
 
@@ -203,7 +203,7 @@ func TestOrderService(t *testing.T) {
 			order:         order,
 			repo:          StubRepository{},
 			cache:         StubCache{},
-			expectedErr:   AddError,
+			expectedErr:   ErrorAddOrder,
 			expectedValue: nil,
 		},
 	}
