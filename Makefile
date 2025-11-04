@@ -38,4 +38,7 @@ local-dev: compose-up-local local-run
 compose-down:
 	docker compose -v -f docker-compose.yaml --project-directory=./ down
 
-.PHONY: build build-producer lint clean-bin tidy local-run local-run-hot docker-build docker-run compose-up compose-up-local compose-down local-dev
+test:
+	go test ./... -v -race -count 100
+
+.PHONY: build build-producer lint clean-bin tidy local-run local-run-hot docker-build docker-run compose-up compose-up-local compose-down local-dev test
