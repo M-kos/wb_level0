@@ -15,8 +15,7 @@ export default defineConfig({
         followRedirects: true,
         secure: false,
         rewrite: (path) => {
-          console.log(path)
-          return path.replace(/^\/api/, '')
+          return path.replace(/^\/api/, '');
         },
       },
     },
