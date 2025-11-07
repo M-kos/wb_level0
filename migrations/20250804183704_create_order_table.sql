@@ -225,20 +225,10 @@ CREATE TABLE IF NOT EXISTS order_item
 		REFERENCES item ( id )
 		ON DELETE CASCADE
 );
-
-CREATE INDEX idx_order_item_item_order ON order_item ( item_id, order_id );
-CREATE UNIQUE INDEX idx_city_name_region ON city ( name, region_id );
-CREATE UNIQUE INDEX idx_address_zip_address_city ON address ( zip, address, city_id );
-CREATE UNIQUE INDEX idx_delivery_customer_address ON delivery ( customer_id, address_id );
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP INDEX IF EXISTS idx_order_item_item_order;
-DROP INDEX IF EXISTS idx_city_name_region;
-DROP INDEX IF EXISTS idx_address_zip_address_city;
-DROP INDEX IF EXISTS idx_delivery_customer_address;
-
 DROP TABLE IF EXISTS order_item;
 DROP TABLE IF EXISTS customer_address;
 DROP TABLE IF EXISTS "order";
